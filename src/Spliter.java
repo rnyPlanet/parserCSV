@@ -1,6 +1,6 @@
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -10,35 +10,42 @@ public class Spliter {
     private static final char DEFAULT_QUOTE = '"';
 
     public static void main(String[] args) throws Exception {
-
-        String sourceFile = "C:\\Users\\worka\\Desktop\\" + "" + ".csv";
+        String sourceFile = "C:\\Users\\worka\\Desktop\\" + "electronic-card-transactions-January-2020-csv-tables" + ".csv";
 
         parse(sourceFile);
-
     }
 
     private static void parse(String sourceFile) throws FileNotFoundException, WrongSeparatorException {
         boolean isSeparatorFound = false;
 
-        Scanner scanner = new Scanner(new File(sourceFile));
+        List<List<String>> rowsFromFile = new ArrayList<>();
 
+        Scanner scanner = new Scanner(new File(sourceFile));
         while (scanner.hasNext()) {
-            String scannerLine = scanner.nextLine();
+            String scannerRow = scanner.nextLine();
 
             if (!isSeparatorFound) {
-                separator = searchSeparator(scannerLine).toCharArray()[0];
+                separator = searchSeparator(scannerRow).toCharArray()[0];
                 isSeparatorFound = true;
             }
 
-            List<String> parsedLine = parseLine(scannerLine);
+            List<String> parsedRow = parseRow(scannerRow);
+            rowsFromFile.add(parsedRow);
 
-            for (String line : parsedLine) {
-                System.out.println(line);
-            }
-
-            System.out.println();
         }
+
+        writeToDb(sourceFile, rowsFromFile);
+
         scanner.close();
+    }
+
+    private static void writeToDb(String sourceFile, List<List<String>> rowsFromFile) {
+        String fileName = new File(sourceFile).getName();
+        fileName = fileName.replaceAll("\\.|-|_|\\s+|\\(|\\)", "");
+
+        DB db = new DB(fileName.substring(0, (Math.min(fileName.length(), 16))), rowsFromFile);
+
+        db.writeRowsFromFileToDb();
     }
 
     private static String searchSeparator(String line) throws WrongSeparatorException {
@@ -52,11 +59,11 @@ public class Spliter {
         throw new WrongSeparatorException();
     }
 
-    public static List<String> parseLine(String line) {
-        return parseLine(line, separator, DEFAULT_QUOTE);
+    private static List<String> parseRow(String line) {
+        return parseRow(line, separator, DEFAULT_QUOTE);
     }
 
-    public static List<String> parseLine(String line, char separators, char customQuote) {
+    private static List<String> parseRow(String line, char separators, char customQuote) {
 
         List<String> result = new ArrayList<>();
 
