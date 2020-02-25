@@ -9,13 +9,7 @@ public class Spliter {
     private static char separator = ',';
     private static final char DEFAULT_QUOTE = '"';
 
-    public static void main(String[] args) throws Exception {
-        String sourceFile = "C:\\Users\\worka\\Desktop\\" + "electronic-card-transactions-January-2020-csv-tables" + ".csv";
-
-        parse(sourceFile);
-    }
-
-    private static void parse(String sourceFile) throws FileNotFoundException, WrongSeparatorException {
+    public List<List<String>> parse(String sourceFile) throws FileNotFoundException, WrongSeparatorException {
         boolean isSeparatorFound = false;
 
         List<List<String>> rowsFromFile = new ArrayList<>();
@@ -31,21 +25,11 @@ public class Spliter {
 
             List<String> parsedRow = parseRow(scannerRow);
             rowsFromFile.add(parsedRow);
-
         }
 
-        writeToDb(sourceFile, rowsFromFile);
-
         scanner.close();
-    }
 
-    private static void writeToDb(String sourceFile, List<List<String>> rowsFromFile) {
-        String fileName = new File(sourceFile).getName();
-        fileName = fileName.replaceAll("\\.|-|_|\\s+|\\(|\\)", "");
-
-        DB db = new DB(fileName.substring(0, (Math.min(fileName.length(), 16))), rowsFromFile);
-
-        db.writeRowsFromFileToDb();
+        return rowsFromFile;
     }
 
     private static String searchSeparator(String line) throws WrongSeparatorException {

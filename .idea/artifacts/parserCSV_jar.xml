@@ -3,6 +3,7 @@
     <output-path>$PROJECT_DIR$/out/artifacts/parserCSV_jar</output-path>
     <root id="archive" name="parserCSV.jar">
       <element id="module-output" name="parserCSV" />
+      <element id="library" level="project" name="mysql-connector-java-8.0.19" />
     </root>
   </artifact>
 </component>

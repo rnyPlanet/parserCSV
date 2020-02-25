@@ -1,16 +1,17 @@
-import java.sql.Connection;
+package db;
+
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DB {
+
     private String dbName;
-    private String tableName = "";
-
-    private Connection con;
+    private String tableName;
     private MyConnector connector;
-
     private List<List<String>> rowsFromFile;
 
     public DB(String dbName, List<List<String>> rowsFromFile) {
@@ -29,6 +30,7 @@ public class DB {
                 System.out.println(e.getMessage());
             }
         }
+        tableName = "";
     }
 
     private void createDatabase() {
@@ -41,7 +43,6 @@ public class DB {
     }
 
     final int[] maxLength = {0};
-
     private void maxStringLe() {
         rowsFromFile
                 .forEach(i -> i
@@ -57,7 +58,7 @@ public class DB {
             Statement statement = connector.getConnection().createStatement();
 
             this.tableName = dbName.substring(0, dbName.length() / 2);
-            StringBuffer sql = new StringBuffer("CREATE TABLE IF NOT EXISTS " + tableName + " (");
+            StringBuffer sql = new StringBuffer("CREATE TABLE IF NOT EXISTS `" + tableName + "` (");
 
             rowsFromFile.get(0).forEach(x ->
                     sql.append("`").append(x).append("`")
@@ -101,11 +102,49 @@ public class DB {
         }
     }
 
-    public void writeRowsFromFileToDb() {
+    public void write() {
         maxStringLe();
         createTable();
         writeRows();
     }
 
+    public List<List<String>> read() {
+        List<List<String>> rows = new ArrayList<>();
+
+        try {
+            // select COLUMNS name
+            String query = "SHOW COLUMNS FROM " + dbName + "." + tableName;
+            Statement st = connector.getConnection().createStatement();
+            ResultSet rs = st.executeQuery(query);
+            List<String> column = new ArrayList<>();
+            while (rs.next()) {
+                column.add(rs.getObject(1).toString());
+            }
+            rows.add(column);
+
+            // select data
+            query = "SELECT * FROM " + dbName + "." + tableName;
+            rs = st.executeQuery(query);
+
+            while (rs.next()) {
+                List<String> row = new ArrayList<>();
+                int numColumns = rs.getMetaData().getColumnCount();
+                for ( int i = 1 ; i <= numColumns ; i++ ) {
+
+                    row.add(rs.getObject(i).toString());
+
+                }
+                rows.add(row);
+            }
+
+
+            st.close();
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return rows;
+    }
 
 }
